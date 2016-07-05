@@ -20,7 +20,7 @@ copy_files() {
     cd "$DIR" &&
     mkdir /etc/minecraft &&
     mv -v ./default/* /etc/default/ &&
-    mv -v ./init.d/* /etc/* &&
+    mv -v ./init.d/* /etc/init.d/ &&
     mv -v ./minecraft /etc/ &&
 
     echo "Setting permissions..." &&
