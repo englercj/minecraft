@@ -7,6 +7,11 @@ TEMP="/tmp"
 DIR="$TEMP/minecraft-scripts"
 REPO="https://github.com/englercj/minecraft.git"
 
+if [ -z $USER ]; then
+    echo "Usage: $0 <username>"
+    exit 1
+fi
+
 # Clone to temp dir
 clone_repo() {
     echo "Downloading from git to '$DIR'" &&
