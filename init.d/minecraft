@@ -1,0 +1,446 @@
+#!/usr/bin/env bash
+# /etc/init.d/minecraft
+# version 2016-07-04 (YYYY-MM-DD)
+
+# A control script for Spigot.
+#
+# This script is configured by a file at /etc/default/minecraft
+# and supports multiworld, rolling logs, and ramdisk worlds.
+#
+# Originally based on minecraft-init: https://github.com/Ahtenus/minecraft-init
+#
+# This script and associated scripts are released under the MIT license:
+#
+# Copyright (C) 2016 Chad Engler <chad@pantherdev.com>
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+### BEGIN INIT INFO
+# Provides:       minecraft
+# Required-Start: $local_fs $remote_fs
+# Required-Stop:  $local_fs $remote_fs
+# Should-Start:   $network
+# Should-Stop:    $network
+# Default-Start:  2 3 4 5
+# Default-Stop:   0 1 6
+# Short-Description: Minecraft server
+# Description:    Starts the CraftBukkit Minecraft server
+### END INIT INFO
+
+# Source the function library
+## CentOS/Fedora
+if [ -f /etc/rc.d/init.d/functions ]
+ then
+ . /etc/rc.d/init.d/functions
+fi
+## Ubuntu
+if [ -f /lib/lsb/init-functions ]
+ then
+ . /lib/lsb/init-functions
+fi
+
+### ### ### ### ### ### ### ### ### ### ### ### ### ###
+### You shouldn't need to edit anything below here! ###
+### ### ### ### ### ### ### ### ### ### ### ### ### ###
+
+## Apply the settings file
+
+# define the location of the settings file from the name of this script
+SETTINGSFILE="/etc/default/$(basename $0)"
+
+# check the file exists, and fail if not
+if [ ! -f "$SETTINGSFILE" ]; then
+  echo " * [ERROR] Settings file $SETTINGSFILE does not exist. Can't run!"
+  exit 1;
+fi
+
+# the config exists so source it
+source "$SETTINGSFILE"
+
+# if the settings are not applying for some reason, then fail
+if [ "$SCRIPTS_PATH" == "" ]; then
+  echo " * [ERROR] Settings file $SETTINGSFILE is not applying. Can't run!"
+  exit 1;
+fi
+
+# Source the scripts so we can do stuff
+for f in "$SCRIPTS_PATH/*.sh"; do
+    source $f
+done
+
+## Get some more info from the settings file
+
+# Find the world name from the existing server file
+WORLDNAME="$(grep -E 'level-name' $SERVER_PATH/server.properties | sed -e s/.*level-name=//)"
+
+# Find the port number from the existing server file
+SERVERPORT="$(grep -E 'server-port' $SERVER_PATH/server.properties | sed -e s/.*server-port=//)"
+
+# Store who the current running user is.
+ME=`whoami`
+
+# trap SIGINT to force exit
+trap mc_force_exit SIGINT
+
+case "$1" in
+    # Starts the server
+    start)
+        if is_running; then
+            echo "Server already running."
+        else
+            check_links
+            to_ram
+            mc_start
+        fi
+        ;;
+    # Stops the server
+    stop)
+        if is_running; then
+            mc_say "SERVER SHUTTING DOWN IN 10 SECONDS!"
+            mc_stop
+            to_disk
+        else
+            echo "No running server."
+        fi
+        ;;
+    # Restarts the server
+    restart)
+        if is_running; then
+            mc_say "SERVER REBOOT IN 10 SECONDS!"
+            mc_stop
+            to_disk
+        else
+            echo "No running server, starting it..."
+        fi
+        check_links
+        to_ram
+        mc_start
+        ;;
+    # Reloads server configuration
+    reload)
+        if is_running; then
+            mc_say "Reloading server configuration.."
+            mc_reload
+        else
+            echo "No running server."
+        fi
+        ;;
+    # Prints user whitelist
+    whitelist)
+        if is_running; then
+            mc_whitelist
+        else
+            echo "Server not running."
+        fi
+        ;;
+    # Reloads user whitelist
+    whitelist-reload)
+        # Reloads the whitelist
+        if is_running; then
+            mc_command "whitelist reload"
+        else
+            echo "No running server."
+        fi
+        ;;
+    # Add user to the whitelist
+    whitelist-add)
+        # Adds a player to the whitelist
+        if is_running; then
+            mc_command "whitelist add $2"
+        else
+            echo "No running server."
+        fi
+        ;;
+    # Backups world
+    backup)
+        if is_running; then
+            mc_say "Backing up world..."
+            mc_saveoff
+            to_disk
+            mc_world_backup
+            mc_saveon
+            mc_say "Backup complete."
+        else
+            mc_world_backup
+        fi
+        ;;
+    # Backup everything
+    backup-server)
+        if is_running; then
+            mc_say "COMPLETE SERVER BACKUP IN 10 SECONDS.";
+            mc_say "WARNING: WILL RESTART SERVER!"
+            mc_stop
+            to_disk
+            mc_server_backup
+            check_links
+            mc_start
+        else
+            mc_server_backup
+        fi
+        ;;
+    # Backup logs
+    backup-log)
+        mc_log_backup
+        ;;
+    # Display server log using 'cat'.
+    log)
+        cat $SERVERLOG
+        ;;
+    # Updates the server
+    update)
+        if is_running; then
+            mc_say "SERVER UPDATE IN 10 SECONDS."
+            mc_stop
+            to_disk
+            mc_server_backup
+            mc_update
+            check_links
+            mc_start
+        else
+            mc_server_backup
+            mc_update
+        fi
+        ;;
+    # Writes from the ramdisk to disk, in case the server crashes.
+    to-disk)
+        mc_saveoff
+        to_disk
+        mc_saveon
+        ;;
+    # Flushes the state of the world to disk, and then disables
+    # saving until save-on is called (useful if you have your own
+    # backup scripts).
+    save-off)
+        if is_running; then
+            mc_saveoff
+        else
+            echo "Server was not running, syncing from ram anyway..."
+        fi
+        to_disk
+        ;;
+    # Re-enables saving if it was disabled by save-off.
+    save-on)
+        if is_running; then
+            mc_saveon
+        else
+            echo "No running server."
+        fi
+        ;;
+    # Says something to the ingame chat
+    say)
+        if is_running; then
+            shift 1
+            mc_say "$*"
+        else
+            echo "No running server to say anything."
+        fi
+        ;;
+    # Runs an arbitrary command on the server
+    command)
+        if is_running; then
+            shift 1
+            mc_command "$*"
+            echo "Sent command: $*"
+        else
+            echo "No running server to send a command to."
+        fi
+        ;;
+    # Lists connected users
+    connected)
+        if is_running; then
+            mc_command list
+            sleep 1s
+            # Get server log in reverse order, assume that response to 'list'
+            # command is already there.
+            tac $SERVERLOG | \
+                # Extract two lines. 1) containing ASCII color code and comma-separated list
+                # of  player names and 2) the line saying "[...] players online:"
+                grep --before-context 1 --max-count 1 "players online" | \
+                # Throw away the latter line.
+                head -n 1 | \
+                # Remove any escape character and the following two bytes (color code).
+                sed 's/[\x01-\x1F\x7F]..//g' | \
+                # Only pass through lines that still have content (if no player online,
+                # then nothing's left over after this grep.
+                grep . | \
+                # Replace ", " separator with newline char.
+                sed 's/, /\n/g'
+        else
+            echo "No running server."
+        fi
+        ;;
+    # List number of connected users.
+    playercount)
+        if is_running; then
+            mc_command list
+            sleep 1s
+            # Same as technique as 'connected' command, but count lines.
+            tac $SERVERLOG | \
+                grep --before-context 1 --max-count 1 "players online" | \
+                head -n 1 | sed 's/[\x01-\x1F\x7F]..//g' | grep . | sed 's/, /\n/g' | wc -l
+        else
+            echo "No running server."
+        fi
+        ;;
+    # Greps for recently logged in users
+    last)
+        echo Recently logged in users:
+        cat $SERVERLOG | awk '/entity|conn/ {sub(/lost/,"disconnected");print $1,$2,$4,$5}'
+        ;;
+    # Shows server status
+    status)
+        if is_running
+        then
+            echo "$SERVICE is running."
+        else
+            echo "$SERVICE is not running."
+        fi
+        ;;
+    # Displays the version the server is running
+    version)
+        if is_running; then
+            mc_command version
+            tac $SERVERLOG | grep -m 1 "This server is running"
+        else
+            echo "The server needs to be running to check version."
+        fi
+        ;;
+    # Checks world links
+    links)
+        check_links
+        ;;
+    # Sets a world to use ramdisk
+    ramdisk)
+        change_ramdisk_state $2
+        ;;
+    # Prints the worlds currently active
+    worlds)
+        get_worlds
+        for INDEX in ${!WORLDNAME[@]}
+        do
+            if ${WORLDRAM[$INDEX]}
+            then
+                echo "${WORLDNAME[$INDEX]} (ramdisk)"
+            else
+                echo ${WORLDNAME[$INDEX]}
+            fi
+        done
+        ;;
+    # Ataches to the screen
+    console)
+        if is_running; then
+            as_user "script /dev/null -q -c \"screen -rx $SCREEN\""
+        else
+            echo "Server is not running. Do you want to start it?"
+            echo "Please put \"(Y)es\", or \"(N)o\": "
+            read START_SERVER
+
+            case "$START_SERVER" in
+                [Yy]|[Yy][Ee][Ss])
+                    check_links
+                    to_ram
+                    mc_start
+                    as_user "script /dev/null -q -c \"screen -rx $SCREEN\""
+                    ;;
+                [Nn]|[Nn][Oo])
+                    clear
+                    echo "Aborting startup!"
+                    sleep 1
+                    clear
+                    exit 1
+                    ;;
+                *)
+                    clear
+                    echo "Invalid input"
+                    sleep 1
+                    clear
+                    exit 1
+                    ;;
+            esac
+        fi
+        ;;
+    # Kills the server
+    kill)
+        # Get terminal's character width
+        WIDTH=`stty size | cut -d ' ' -f 2`
+
+        # Chop output after WIDTH chars
+        pstree | grep MDSImporte | cut -c 1-${WIDTH}
+
+        echo "Killing the server is an EMERGENCY procedure, and should not be used to perform a normal shutdown! All changes younger than 15 minutes could be permanantly lost and WORLD CORRUPTION is possible! Are you ABSOLUTELY POSITIVE this is what you want to do?"
+        echo "Please put \"(Y)es\", or \"(N)o\": "
+        read KILL_SERVER
+
+        # Determine which option was specified
+        case "$KILL_SERVER" in
+            [Yy]|[Yy][Ee][Ss])
+                echo "KILLING SERVER PROCESSES!!!"
+                force_exit
+                exit 1
+                ;;
+            [Nn]|[Nn][Oo])
+                echo "Aborting!"
+                exit 1
+                ;;
+            *)      # If anything else, exit 1
+                echo "Error: Invalid Input!"
+                exit 1
+                ;;
+        esac
+        ;;
+    help|--help|-h)
+        echo "Usage: $0 COMMAND"
+        echo
+        echo "Available commands:"
+        echo -e "   start \t\t Starts the server"
+        echo -e "   stop \t\t Stops the server"
+        echo -e "   restart \t\t Restarts the server"
+        echo -e "   reload \t\t Reloads the server configuration"
+        echo -e "   whitelist \t\t Prints the current whitelist"
+        echo -e "   whitelist-add NAME \t Adds the specified player to the server whitelist"
+        echo -e "   whitelist-reload \t Reloads the whitelist"
+        echo -e "   backup \t\t Backups the worlds defined in the script"
+        echo -e "   backup-server \t Backups the entire server folder"
+        echo -e "   backup-log \t\t Backups the logfiles"
+        echo -e "   log \t\t\t Prints the server log"
+        echo -e "   check-update \t Checks for updates to servers"
+        echo -e "   update \t\t Fetches the latest version of minecraft.jar server and Bukkit"
+        echo -e "   to-disk \t\t Copies the worlds from the ramdisk to worldstorage"
+        echo -e "   save-off \t\t Flushes the world to disk and then disables saving"
+        echo -e "   save-on \t\t Re-enables saving if it was previously disabled by save-off"
+        echo -e "   say \t\t\t Prints the given string to the ingame chat"
+        echo -e "   command \t\t Runs a command on the server"
+        echo -e "   connected \t\t Lists connected users"
+        echo -e "   playercount \t\t Prints the number of connected users"
+        echo -e "   last \t\t Displays recently connected users"
+        echo -e "   status \t\t Displays server status"
+        echo -e "   version \t\t Displays Bukkit version and then exits"
+        echo -e "   links \t\t Creates nessesary symlinks"
+        echo -e "   ramdisk WORLD \t Toggles ramdisk configuration for WORLD"
+        echo -e "   worlds \t\t Displays a list of available worlds"
+        echo -e "   console \t\t Attaches to the server screen"
+        echo -e "   kill \t\t Kills the server, prefer stop over kill"
+        ;;
+    *)
+        echo "No such command, see $0 help"
+        exit 1
+        ;;
+esac
+
+exit 0
