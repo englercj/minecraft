@@ -66,7 +66,7 @@ SETTINGSFILE="/etc/default/$(basename $0)"
 
 # check the file exists, and fail if not
 if [ ! -f "$SETTINGSFILE" ]; then
-  echo " * [ERROR] Settings file $SETTINGSFILE does not exist. Can't run!"
+  echo "[ERROR] Settings file $SETTINGSFILE does not exist. Can't run!"
   exit 1;
 fi
 
@@ -75,7 +75,7 @@ source "$SETTINGSFILE"
 
 # if the settings are not applying for some reason, then fail
 if [ "$SCRIPTS_PATH" == "" ]; then
-  echo " * [ERROR] Settings file $SETTINGSFILE is not applying. Can't run!"
+  echo "[ERROR] Settings file $SETTINGSFILE is not applying. Can't run!"
   exit 1;
 fi
 

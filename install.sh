@@ -32,7 +32,8 @@ copy_files() {
     echo "Setting permissions..." &&
     chown $USER /etc/minecraft &&
     chown $USER /etc/minecraft/* &&
-    chown $USER /etc/default/minecraft
+    chown $USER /etc/default/minecraft &&
+    chmod +x /etc/init.d/minecraft
 }
 
 clone_repo && copy_files && echo "Installed!"

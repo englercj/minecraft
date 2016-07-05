@@ -17,17 +17,20 @@ check_update_spigot_build_tools() {
 # Updates spigot build tools
 ##
 update_spigot_build_tools() {
-    cd $BUILD_PATH && curl -o BuildTools.jar $URL_BUILD_TOOLS
+    cd $BUILD_PATH
+    as_user "curl -o BuildTools.jar $URL_BUILD_TOOLS"
+    echo $NEW_REVISION > revision.txt
 }
 
 ##
 # update spigot
 ##
 update_spigot() {
-    cd $BUILD_PATH &&
-    rm craftbukkit-*.jar spigot-*.jar &&
-    java -jar BuildTools.jar --rev latest &&
-    cp craftbukkit-*.jar $SERVER_PATH/craftbukkit.jar
+    cd $BUILD_PATH
+    as_user "rm craftbukkit-*.jar spigot-*.jar"
+    as_user "java -jar BuildTools.jar --rev latest"
+    as_user "cp -v craftbukkit-*.jar $SERVER_PATH/craftbukkit.jar"
+    as_user "cp -v spigot-*.jar $SERVER_PATH/$SERVICE"
 }
 
 ##
