@@ -79,5 +79,5 @@ mc_whitelist(){
     echo
     echo "Currently there are the following players on your whitelist:"
     echo
-    echo ${whitelist:49} | sed 's/, /\n/g'
+    echo ${whitelist:81} | sed 's/, /\n/g'
 }
