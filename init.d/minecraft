@@ -80,7 +80,7 @@ if [ "$SCRIPTS_PATH" == "" ]; then
 fi
 
 # Source the scripts so we can do stuff
-for f in "$SCRIPTS_PATH/*.sh"; do
+for f in $SCRIPTS_PATH/*.sh; do
     source $f
 done
 

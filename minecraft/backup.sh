@@ -2,7 +2,7 @@
 # Sets some env vars based on backup format.
 ##
 check_backup_settings() {
-    case "$BACKUPFORMAT" in
+    case "$BACKUP_FORMAT" in
         tar)
             COMPRESSCMD="tar -hcjf"
             STORECMD="tar -cpf"
