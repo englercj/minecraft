@@ -95,9 +95,6 @@ SERVERPORT="$(grep -E 'server-port' $SERVER_PATH/server.properties | sed -e s/.*
 # Store who the current running user is.
 ME=`whoami`
 
-# trap SIGINT to force exit
-trap mc_force_exit SIGINT
-
 case "$1" in
     # Starts the server
     start)
@@ -200,7 +197,7 @@ case "$1" in
         ;;
     # Display server log using 'cat'.
     log)
-        cat $SERVERLOG
+        cat $LOG_PATH
         ;;
     # Updates the server
     update)
@@ -268,7 +265,7 @@ case "$1" in
             sleep 1s
             # Get server log in reverse order, assume that response to 'list'
             # command is already there.
-            tac $SERVERLOG | \
+            tac $LOG_PATH | \
                 # Extract two lines. 1) containing ASCII color code and comma-separated list
                 # of  player names and 2) the line saying "[...] players online:"
                 grep --before-context 1 --max-count 1 "players online" | \
@@ -291,7 +288,7 @@ case "$1" in
             mc_command list
             sleep 1s
             # Same as technique as 'connected' command, but count lines.
-            tac $SERVERLOG | \
+            tac $LOG_PATH | \
                 grep --before-context 1 --max-count 1 "players online" | \
                 head -n 1 | sed 's/[\x01-\x1F\x7F]..//g' | grep . | sed 's/, /\n/g' | wc -l
         else
@@ -301,7 +298,7 @@ case "$1" in
     # Greps for recently logged in users
     last)
         echo Recently logged in users:
-        cat $SERVERLOG | awk '/entity|conn/ {sub(/lost/,"disconnected");print $1,$2,$4,$5}'
+        cat $LOG_PATH | awk '/entity|conn/ {sub(/lost/,"disconnected");print $1,$2,$4,$5}'
         ;;
     # Shows server status
     status)
@@ -316,7 +313,7 @@ case "$1" in
     version)
         if is_running; then
             mc_command version
-            tac $SERVERLOG | grep -m 1 "This server is running"
+            tac $LOG_PATH | grep -m 1 "This server is running"
         else
             echo "The server needs to be running to check version."
         fi

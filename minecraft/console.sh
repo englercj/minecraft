@@ -73,8 +73,8 @@ mc_reload() {
 ##
 mc_whitelist(){
     mc_command "whitelist list"
-    sleep 1s
-    whitelist=$(tac $SERVERLOG | grep -m 1 "White-listed players:")
+    sleep 1
+    whitelist=$(tac $LOG_PATH | grep -m 1 "whitelisted players:")
 
     echo
     echo "Currently there are the following players on your whitelist:"

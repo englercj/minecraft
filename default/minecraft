@@ -104,5 +104,7 @@ GZIPLOGS=true
 # What to prepend to the logfile name (Leave blank for nothing)
 LOG_NAME_PREPEND="logfile_"
 
-# Settings for overviewer command
+# No touchy
 # ===============================
+
+FORMAT='$1'
