@@ -1,12 +1,12 @@
 # Minecraft control scripts
 
-Tested with spigot v1.10.2.
+Works with minecraft v1.10.2.
 
 ## Features
 
 - Base commands (start/stop/restart/reload)
 - Support ramdisk for worlds
-- Backups for worlds, servers, and logs
+- Backups for worlds, and servers
 - Updating for spigot servers
 
 ## Requirements
@@ -14,8 +14,8 @@ Tested with spigot v1.10.2.
 - screen
 - rsync
 - curl
-- java 8
 - git
+- java 8 (unless you change invokation)
 
 ## Installation
 
@@ -32,3 +32,4 @@ curl -o- https://raw.githubusercontent.com/englercj/minecraft/master/install.sh 
  * Moving worlds into proper folders
  * setting common properties
 - Installing spigot plugins
+- Fix log rotation/backup to work with new mc log format

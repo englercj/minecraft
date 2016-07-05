@@ -32,7 +32,7 @@ mc_world_backup() {
     as_user "mkdir -p $WORLD_BACKUP_PATH"
 
     # Check if the backup script compatibility is enabled
-    if [ "$BACKUP_SCRIPT_COMPATIBLE" ]; then
+    if [ "$BACKUP_SCRIPT_COMPATIBLE" == true ]; then
         # If it is enabled, then delete the old backups to prevent errors
         echo "Detected that backup script compatibility is enabled, deleting old backups that are not necessary."
         as_user "rm -r $WORLD_BACKUP_PATH/*"
@@ -42,13 +42,13 @@ mc_world_backup() {
         echo "Backing up minecraft ${WORLDNAME[$INDEX]}"
 
         # If this is set tars will be created compatible to WorldEdit
-        if [ "$WORLD_EDIT_COMPATIBLE" ]; then
+        if [ "$WORLD_EDIT_COMPATIBLE" == true ]; then
             as_user "mkdir -p $WORLD_BACKUP_PATH/${WORLDNAME[$INDEX]}"
             path=`datepath $WORLD_BACKUP_PATH/${WORLDNAME[$INDEX]}/ $ARCHIVEENDING $ARCHIVEENDING`
 
         # If is set tars will be put in $WORLD_BACKUP_PATH without any timestamp to be compatible with
         # [backup rotation script](https://github.com/adamfeuer/rotate-backups)
-        elif [ "$BACKUP_SCRIPT_COMPATIBLE" ]; then
+        elif [ "$BACKUP_SCRIPT_COMPATIBLE" == true ]; then
             path=$BACKUPPATH/${WORLDNAME[$INDEX]}$ARCHIVEENDING
 
         # Normal backup
@@ -58,7 +58,7 @@ mc_world_backup() {
         fi
 
         # Don't store the complete path
-        if [ "$WORLD_EDIT_COMPATIBLE" ]; then
+        if [ "$WORLD_EDIT_COMPATIBLE" == true ]; then
             as_user "cd $SERVER_PATH && $COMPRESSCMD $path ${WORLDNAME[$INDEX]}"
         else
             as_user "$COMPRESSCMD $path $SERVER_PATH/${WORLDNAME[$INDEX]}"
@@ -75,7 +75,7 @@ mc_server_backup() {
     path=`datepath $SERVER_BACKUP_PATH/mine_`
     as_user "mkdir -p $path"
 
-    if [ "$COMPRESS_WHOLEBACKUP" ]; then
+    if [ "$COMPRESS_SERVER_BACKUP" == true ]; then
         as_user "$COMPRESSCMD $path/whole-backup$ARCHIVEENDING $SERVER_PATH"
     else
         as_user "$STORECMD $path/whole-backup$STOREDENDING $SERVER_PATH"
