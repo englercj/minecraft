@@ -19,7 +19,7 @@ clone_repo() {
 copy_files() {
     echo "Installing files..." &&
     cd "$DIR" &&
-    mkdir /etc/minecraft &&
+    mkdir -p /etc/minecraft &&
     mv -v ./default/* /etc/default/ &&
     mv -v ./init.d/* /etc/init.d/ &&
     mv -v ./minecraft /etc/ &&
