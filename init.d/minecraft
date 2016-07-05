@@ -86,9 +86,6 @@ done
 
 ## Get some more info from the settings file
 
-# Find the world name from the existing server file
-WORLDNAME="$(grep -E 'level-name' $SERVER_PATH/server.properties | sed -e s/.*level-name=//)"
-
 # Find the port number from the existing server file
 SERVERPORT="$(grep -E 'server-port' $SERVER_PATH/server.properties | sed -e s/.*server-port=//)"
 

@@ -117,7 +117,7 @@ check_links() {
                 if [ "$link" != "$RAMDISK_PATH/${WORLDNAME[$INDEX]}" ]; then
                     as_user "rm -f $SERVER_PATH/${WORLDNAME[$INDEX]}"
                     as_user "ln -s $RAMDISK_PATH/${WORLDNAME[$INDEX]} $SERVER_PATH/${WORLDNAME[$INDEX]}"
-                    echo "Created link for ${WORLDNAME[$INDEX]}"
+                    echo "Created ramdisk link for ${WORLDNAME[$INDEX]}"
                 fi
             else
                 if [ "$link" != "${WORLDS_PATH}/${WORLDNAME[$INDEX]}" ]; then
