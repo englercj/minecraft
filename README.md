@@ -33,3 +33,4 @@ curl -o- https://raw.githubusercontent.com/englercj/minecraft/master/install.sh 
  * setting common properties
 - Installing spigot plugins
 - Fix log rotation/backup to work with new mc log format
+- Better updating, right now is really janky...

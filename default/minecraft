@@ -4,11 +4,11 @@
 # Paths
 # ===============================
 
-# Directory where the control scripts can be found (the `scripts/` dir from repo).
-SCRIPTS_PATH="/etc/minecraft"
-
 # Path of server binary and world
 SERVER_PATH="/home/minecraft/server"
+
+# This is the path to download and build Spigot in
+BUILD_PATH="/home/minecraft/build"
 
 # Where world backups go to live
 WORLD_BACKUP_PATH="/home/minecraft/backups/worlds"
@@ -16,28 +16,31 @@ WORLD_BACKUP_PATH="/home/minecraft/backups/worlds"
 # Where server backups go to live
 SERVER_BACKUP_PATH="/home/minecraft/backups/server"
 
-# This is the directory that logs will be "rolled" into
+# Where log backups go to live
 LOG_BACKUP_PATH="/home/minecraft/backups/logs"
 
 # Path to the log so it can be rolled
 LOG_PATH="$SERVER_PATH/logs/latest.log"
 
-# Location of the worlds
+# Location to store the worlds on disk
 WORLDS_PATH="$SERVER_PATH/worlds"
 
 # Path to your ramdisk, usually doesn't need to be changed
 RAMDISK_PATH="/dev/shm"
 
-# This is the path to build Spigot in
-BUILD_PATH="/home/minecraft/build"
+# Directory where the control scripts can be found (the `minecraft/` dir from repo)
+# Normally this doesn't need to be changed, especially if you used the `install.sh` script
+SCRIPTS_PATH="/etc/minecraft"
 
 # URLs
 # ===============================
 
-# This the URL to check for updates with
+# This is the URL to the console output of the spigot build.
+# We use it to get the git hash for the build. That is how it checks if there has been an update
+# to the build tools.
 URL_CONSOLE_TEXT="https://hub.spigotmc.org/jenkins/job/BuildTools/lastStableBuild/consoleText"
 
-# URL of server executable for update checking
+# URL of the build tools to download when an update is needed.
 URL_BUILD_TOOLS="https://hub.spigotmc.org/jenkins/job/BuildTools/lastStableBuild/artifact/target/BuildTools.jar"
 
 # Invokation/Update settings
@@ -49,18 +52,10 @@ SERVICE="spigot.jar"
 # Username of non-root user who will run the server
 USERNAME="minecraft"
 
-# Number of CPU cores to thread across if using multithreaded garbage collection
-CPU_COUNT="2"
-
-# How many days worth of backups to keep (default 7)
-BACKUPS_TO_KEEP="5"
-
 # Name of Screen session that runs the server
 SCREEN="minecraft"
 
 ## The Java command to run the server, uncomment one INVOCATION line only!
-
-# Nothing special, just start the server with 1Gb RAM
 # INVOCATION="java -Xms1G -Xmx1G -Djava.net.preferIPv4Stack=true -jar $SERVICE nogui"
 INVOCATION="java -Xms1G -Xmx2G -XX:+UseLargePages -XX:+AggressiveOpts -XX:+UseFastAccessorMethods -XX:+OptimizeStringConcat -XX:+UseBiasedLocking -Xincgc -XX:MaxGCPauseMillis=10 -XX:SoftRefLRUPolicyMSPerMB=10000 -XX:+CMSParallelRemarkEnabled -XX:ParallelGCThreads=10 -Djava.net.preferIPv4Stack=true -jar $SERVICE nogui"
 
@@ -93,13 +88,6 @@ WORLD_EDIT_COMPATIBLE=false
 # a lot of space in your server directory, so the compression ratio of the compressed
 # backup will not be very high.
 COMPRESS_SERVER_BACKUP=true
-
-# Whether or not to gzip logs
-#
-GZIPLOGS=true
-
-# What to prepend to the logfile name (Leave blank for nothing)
-LOG_NAME_PREPEND="logfile_"
 
 # No touchy
 # ===============================

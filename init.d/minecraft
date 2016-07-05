@@ -66,7 +66,7 @@ SETTINGSFILE="/etc/default/$(basename $0)"
 
 # check the file exists, and fail if not
 if [ ! -f "$SETTINGSFILE" ]; then
-  echo "[ERROR] Settings file $SETTINGSFILE does not exist. Can't run!"
+  echo "[ERROR] Settings file $SETTINGSFILE does not exist."
   exit 1;
 fi
 
@@ -75,7 +75,7 @@ source "$SETTINGSFILE"
 
 # if the settings are not applying for some reason, then fail
 if [ "$SCRIPTS_PATH" == "" ]; then
-  echo "[ERROR] Settings file $SETTINGSFILE is not applying. Can't run!"
+  echo "[ERROR] Settings file $SETTINGSFILE is not applying."
   exit 1;
 fi
 
@@ -92,6 +92,7 @@ SERVERPORT="$(grep -E 'server-port' $SERVER_PATH/server.properties | sed -e s/.*
 # Store who the current running user is.
 ME=`whoami`
 
+# handle script command
 case "$1" in
     # Starts the server
     start)
@@ -371,7 +372,12 @@ case "$1" in
         ;;
     # Prints details information about the running instance
     info)
-        mc_info
+        if is_running; then
+            mc_info
+        else
+            echo "Server is not running."
+            exit 1
+        fi
         ;;
     # Kills the server
     kill)
