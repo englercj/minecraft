@@ -10,6 +10,7 @@ REPO="https://github.com/englercj/minecraft.git"
 # Clone to temp dir
 clone_repo() {
     echo "Downloading from git to '$DIR'" &&
+    rm -rf $DIR &&
     mkdir -p "$DIR" &&
     command git clone "$REPO" "$DIR"
 }
