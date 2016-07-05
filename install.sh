@@ -22,7 +22,7 @@ copy_files() {
     mkdir -p /etc/minecraft &&
     mv -v ./default/* /etc/default/ &&
     mv -v ./init.d/* /etc/init.d/ &&
-    mv -v ./minecraft /etc/ &&
+    mv -v ./minecraft/* /etc/minecraft/ &&
 
     echo "Setting permissions..." &&
     chown $USER /etc/minecraft &&
