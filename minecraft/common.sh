@@ -19,9 +19,9 @@ is_running() {
     pidfile=${SERVER_PATH}/${SCREEN}.pid
 
     if [ -f "$pidfile" ]; then
-        pid=$(head -1 $pidfile)
+        SCREENPID=$(head -1 $pidfile)
 
-        if ps ax | grep -v grep | grep ${pid} | grep "${SCREEN}" > /dev/null
+        if ps ax | grep -v grep | grep ${SCREENPID} | grep "${SCREEN}" > /dev/null
         then
             return 0
         else
@@ -35,9 +35,9 @@ is_running() {
             echo "No pidfile found, but server's running."
             echo "Re-creating the pidfile."
 
-            pid=$(ps ax | grep -v grep | grep "${SCREEN} ${INVOCATION}" | cut -f1 -d' ')
+            SCREENPID=$(ps ax | grep -v grep | grep "${SCREEN} ${INVOCATION}" | cut -f1 -d' ')
             check_permissions
-            as_user "echo $pid > $pidfile"
+            as_user "echo $SCREENPID > $pidfile"
 
             return 0
         else
@@ -129,7 +129,7 @@ check_links() {
         else
             echo "Could not process the world named '${WORLDNAME[$INDEX]}'. Please move all worlds to ${WORLDS_PATH}."
 
-            exit 1
+            return 1
         fi
     done
 }
@@ -170,7 +170,7 @@ to_disk() {
 ##
 change_ramdisk_state() {
     if [ ! -e $WORLDS_PATH/$1 ]; then
-        echo "World \"$1\" not found."
+        echo "World \"$1\" not found at $WORLDS_PATH/$1."
         exit 1
     fi
 

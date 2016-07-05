@@ -19,7 +19,7 @@ check_update_spigot_build_tools() {
 update_spigot_build_tools() {
     cd $BUILD_PATH
     as_user "curl -o BuildTools.jar $URL_BUILD_TOOLS"
-    echo $NEW_REVISION > revision.txt
+    as_user "echo $NEW_REVISION > revision.txt"
 }
 
 ##

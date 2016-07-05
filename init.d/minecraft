@@ -375,6 +375,10 @@ case "$1" in
             esac
         fi
         ;;
+    # Prints details information about the running instance
+    info)
+        mc_info
+        ;;
     # Kills the server
     kill)
         # Get terminal's character width
@@ -429,12 +433,12 @@ case "$1" in
         echo -e "   connected \t\t Lists connected users"
         echo -e "   playercount \t\t Prints the number of connected users"
         echo -e "   last \t\t Displays recently connected users"
-        echo -e "   status \t\t Displays server status"
         echo -e "   version \t\t Displays Bukkit version and then exits"
         echo -e "   links \t\t Creates nessesary symlinks"
         echo -e "   ramdisk WORLD \t Toggles ramdisk configuration for WORLD"
         echo -e "   worlds \t\t Displays a list of available worlds"
         echo -e "   console \t\t Attaches to the server screen"
+        echo -e "   info \t\t Displays detailed information about the running process"
         echo -e "   kill \t\t Kills the server, prefer stop over kill"
         ;;
     *)
