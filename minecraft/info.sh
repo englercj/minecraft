@@ -24,9 +24,9 @@ mc_info() {
         fi
 
         echo " - Active Connections : "
-        netstat --inet -tna | grep -E "Proto|$SERVERPORT"
+        netstat -tna | grep --color=never -E "Proto|$SERVERPORT"
     else
-        echo " * $SERVERNAME is not running. Unable to give info."
+        echo "$SERVERNAME is not running. Unable to give info."
         exit 1
     fi
 }
